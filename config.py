@@ -1,4 +1,0 @@
-BOT_TOKEN = '7789899214:AAG5Sh0kyN2TjoWJc1EdynrxoRUP2Yeu6Gs'
-GOOGLE_CREDENTIALS_FILE = 'google_creds.json'
-GOOGLE_SHEET_ID = '1h_FjWE6U2vfX2rxdnyqWhsTqN9bZYa7eRdQNYOalswU'
-ADMIN_IDS = [6470180909]  # айдишники, если что
