@@ -1,3 +1,12 @@
 config.py
 
 google_creds.json
+
+# Python
+*.pyc
+__pycache__/
+
+# Secrets
+google_creds.json
+.env
+*.key
