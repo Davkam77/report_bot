@@ -16,14 +16,14 @@ def save_report(user_id, username, answers: dict, questions: list):
 
 def get_stats():
     records = sheet.get_all_records()
-    print("Records from sheet:", records)  # DEBUG
     total_money = 0.0
     for r in records:
         val = r.get('money_earned', 0)
-        print("Got value:", val)  # 👈 добавь это
         try:
-            total_money += float(str(val).replace(',', '.'))
-        except (ValueError, TypeError) as e:
-            print(f"❗ Warning: Невозможно преобразовать '{val}' в число ({e})")
+            val_clean = str(val).replace(',', '.').strip()
+            if val_clean:
+                total_money += float(val_clean)
+        except (ValueError, TypeError):
             continue
     return total_money
+
