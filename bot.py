@@ -10,7 +10,6 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 import sheets, config, json
 
-# Настроим logging
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=config.BOT_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
@@ -18,18 +17,15 @@ dp = Dispatcher(storage=MemoryStorage())
 with open('questions.json', encoding='utf-8') as f:
     QUESTIONS = json.load(f)
 
-# FSM-состояния
 class ReportFSM(StatesGroup):
     waiting_for_answers = State()
 
-# Старт и кнопка отчёта
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     kb = InlineKeyboardBuilder()
     kb.button(text="Отправить отчёт", callback_data="report_start")
     await message.answer("Привет! Нажми, чтобы отправить отчёт.", reply_markup=kb.as_markup())
 
-# Обработка кнопки
 @dp.callback_query(StateFilter(None), F.data == "report_start")
 async def start_report(call: types.CallbackQuery, state: FSMContext):
     await state.set_state(ReportFSM.waiting_for_answers)
@@ -43,11 +39,12 @@ async def ask_next_question(message, state):
         q = QUESTIONS[q_index]['text']
         await message.answer(q)
     else:
-        # Всё собрано, пишем в таблицу
         user = message.from_user
         answers = data['answers']
-        sheets.save_report(user.id, user.username, answers)
-        await message.answer("Спасибо, отчёт принят! ✨\n\nP.S. Итог за месяц: {}₽".format(sheets.get_stats()))
+        # Передаём QUESTIONS для сохранения в правильном порядке
+        sheets.save_report(user.id, user.username, answers, QUESTIONS)
+        stats = sheets.get_stats()
+        await message.answer(f"Спасибо, отчёт принят! ✨\n\nP.S. Итог за месяц: {stats}₽")
         await state.clear()
 
 @dp.message(ReportFSM.waiting_for_answers)
@@ -59,9 +56,8 @@ async def process_answer(message: types.Message, state: FSMContext):
     await state.update_data(answers=answers, q_index=q_index+1)
     await ask_next_question(message, state)
 
-# Рассылка по расписанию (раз в месяц)
 async def monthly_report_reminder():
-    users = sheets.sheet.col_values(2)[1:]  # Все user_id из таблицы, кроме заголовка
+    users = sheets.sheet.col_values(2)[1:]
     for uid in set(users):
         try:
             kb = InlineKeyboardBuilder()
